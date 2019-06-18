@@ -25,7 +25,6 @@ var (
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0a, 0xbc, 0x00, 0xd0, 0x1d, 0xff, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x0a, 0xbc, 0x00, 0xd0, 0x1d, 0xff, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x09, 0xbc, 0x00, 0x10, 0x11, 0xff, 0x00, 0x00, 0x00, 0x00,
-		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 	}
 
 	test2PSPDirectory = Directory{
@@ -35,6 +34,7 @@ var (
 			TotalEntries: 0x4,
 			Reserved:     0x0,
 		},
+		Location: testNewPSPDirBase,
 		Entries: []Entry{
 			{DirectoryEntry: DirectoryEntry{Type: 0x0, Size: 0xbc0b0500, Location: 0x002e9000, Reserved: 0x0}},
 			{DirectoryEntry: DirectoryEntry{Type: 0x0, Size: 0xbc0a0000, Location: 0xff1dd000, Reserved: 0x0}},
@@ -130,7 +130,7 @@ var (
 		0x00, 0x00, 0x00, 0x00, 0x40, 0x02, 0x00, 0x00, 0x00, 0x10, 0x0c, 0xff, 0x00, 0x00, 0x00, 0x00,
 	}
 
-	testMiniDirectory = Directory{
+	testPSPMiniDirectory = Directory{
 		Header: DirectoryHeader{
 			Cookie:       [4]byte{0x24, 0x50, 0x53, 0x50},
 			Checksum:     0xea882e70, // Not checked and wrong
@@ -358,6 +358,14 @@ func TestDirectoryEntry_WriteBHD(t *testing.T) {
 	assert.Equal(t, expectedImage, baseImage)
 }
 
+func TestDirectory_WriteToSmall(t *testing.T) {
+	baseImage := make([]byte, FETDefaultOffset+5)
+
+	err := testPSPDirectory.Write(baseImage, DefaultFlashMapping)
+
+	assert.EqualError(t, err, "BaseImage to small to insert Directory")
+}
+
 func TestDirectory_WriteBHD(t *testing.T) {
 	baseImage := make([]byte, testImage16MB)
 	expectedImage := make([]byte, testImage16MB)
@@ -369,10 +377,13 @@ func TestDirectory_WriteBHD(t *testing.T) {
 	assert.Equal(t, expectedImage, baseImage)
 }
 
-func TestDirectory_WriteToSmall(t *testing.T) {
-	baseImage := make([]byte, FETDefaultOffset+5)
+func TestDirectory_Write2PSP(t *testing.T) {
+	baseImage := make([]byte, testImage16MB)
+	expectedImage := make([]byte, testImage16MB)
+	copy(expectedImage[test2PSPDirectory.Location:], test2PSPDirectoryBytes)
 
-	err := testPSPDirectory.Write(baseImage, DefaultFlashMapping)
+	err := test2PSPDirectory.Write(baseImage, DefaultFlashMapping)
 
-	assert.EqualError(t, err, "BaseImage to small to insert Directory")
+	assert.Nil(t, err)
+	assert.Equal(t, expectedImage, baseImage)
 }

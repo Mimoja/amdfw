@@ -113,7 +113,6 @@ func parseDirectoryRom(firmwareBytes []byte, address *uint32, flashMapping uint3
 }
 
 func recursiveDirectories(firmwareBytes []byte, directory *Directory, flashMapping uint32) ([]*Directory, error) {
-	//TODO Test
 	var directories []*Directory
 	for _, entry := range directory.Entries {
 		if entry.DirectoryEntry.Type == 0x40 ||
@@ -170,18 +169,15 @@ func (rom Rom) Write(baseImage []byte, table *FirmwareEntryTable, flashMapping u
 
 		address = address &^ flashMapping
 
-		//TODO Test
-		if int(address) > len(baseImage) {
+		if int(address)+len(rom.Raw) > len(baseImage) {
 			return fmt.Errorf("Cannot write Rom: Invalid address in FET")
 		}
 
 		copy(baseImage[address:], rom.Raw)
 	} else if rom.Directories != nil {
-		//TODO Test
 		for _, directory := range rom.Directories {
 			err = directory.Write(baseImage, flashMapping)
 			if err != nil {
-				//TODO Test
 				return fmt.Errorf("Cannot Write Rom: %v", err)
 			}
 		}

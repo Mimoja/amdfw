@@ -181,8 +181,14 @@ func (directory *Directory) Write(baseImage []byte, flashMapping uint32) error {
 		return err
 	}
 
-	//TODO handle 2PSP
-	location := directory.Location + 16
+	location := directory.Location + 0x10
+
+	cookie := string(directory.Header.Cookie[:])
+
+	if cookie == DUALPSPCOOCKIE {
+		location += 0x10
+	}
+
 	for i, entry := range directory.Entries {
 
 		entryLength := uint32(16)
@@ -196,9 +202,6 @@ func (directory *Directory) Write(baseImage []byte, flashMapping uint32) error {
 		if err != nil {
 			return err
 		}
-
-		//TODO Handle 2PSP
-		//TODO Test 2PSP
 
 		entryLocation := entry.DirectoryEntry.Location
 
@@ -259,7 +262,6 @@ func (directory *Directory) ValidateChecksum() (valid bool, actual uint32) {
 		binary.LittleEndian.PutUint32(uint32Buffer, entry.DirectoryEntry.Reserved)
 		buf.Write(uint32Buffer)
 
-		//TODO Test BHD
 		if cookie == BHDCOOCKIE || cookie == SECONDBHDCOOCKIE {
 			uint64Buffer := make([]byte, 8)
 			binary.LittleEndian.PutUint64(uint64Buffer, *entry.DirectoryEntry.Unknown)

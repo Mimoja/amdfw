@@ -14,7 +14,7 @@ var (
 			{
 				Type: PSPRom,
 				Directories: []*Directory{
-					&testMiniDirectory,
+					&testPSPMiniDirectory,
 				},
 				Raw: nil,
 			},

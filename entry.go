@@ -15,6 +15,7 @@ type (
 		Signature      []byte
 		Comment        []string
 		TypeInfo       *TypeInfo
+		Version        string
 	}
 
 	EntryHeader struct {
@@ -112,7 +113,7 @@ func ParseEntry(firmwareBytes []byte, directoryEntry DirectoryEntry, flashMappin
 	 */
 
 	if size < 0x100 && size > 0 {
-		return errorAndComment(&entry, fmt.Errorf("Not a parsable Entry: Entry to small for header parsing: (0x08%X) bytes", size))
+		return errorAndComment(&entry, fmt.Errorf("Not a parsable Entry: Entry to small for header parsing: (0x%08X) bytes", size))
 	}
 
 	headerBytes := entryBytes[:0x100]
@@ -129,7 +130,7 @@ func ParseEntry(firmwareBytes []byte, directoryEntry DirectoryEntry, flashMappin
 	}
 
 	if header.IsCompressed > 1 {
-		return errorAndComment(&entry, fmt.Errorf("Not a parsable Entry: Compressed Filed is 0x%02X", header.IsCompressed))
+		return errorAndComment(&entry, fmt.Errorf("Not a parsable Entry: Compressed Field is 0x%02X", header.IsCompressed))
 	}
 
 	if header.SizePacked == 0 &&
@@ -140,6 +141,8 @@ func ParseEntry(firmwareBytes []byte, directoryEntry DirectoryEntry, flashMappin
 
 	entry.Header = &header
 	entry.Signature = entryBytes[size-2048/8:]
+
+	entry.Version = fmt.Sprintf("%X.%X.%X.%X", header.Version[3], header.Version[2], header.Version[1], header.Version[0])
 
 	return &entry, nil
 }

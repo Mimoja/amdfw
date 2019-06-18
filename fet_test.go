@@ -21,6 +21,11 @@ var (
 		0x00, 0x10, 0x10, 0xff, 0x00, 0x00, 0x10, 0x00, 0x00, 0x10, 0x1c, 0xff, 0x00, 0xd0, 0x2b, 0xff,
 	}
 
+	fetXHCIBytes = []byte{
+		0xaa, 0x55, 0xaa, 0x55, 0x00, 0x00, 0x00, 0x00, 0x67, 0x45, 0x23, 0x01, 0x00, 0x10, 0x02, 0xff,
+		0xaa, 0x55, 0xaa, 0x55,
+	}
+
 	testImcRomBase    uint32 = 0
 	testGecRomBase    uint32 = 0x01234567
 	testXHCRomBase    uint32 = 0xFF021000
@@ -39,6 +44,14 @@ var (
 		BHDDirBase:    &testBHDDirBase,
 		NewBHDDirBase: &testUnknown1,
 		Location:      0x20000,
+	}
+
+	testShortFet = FirmwareEntryTable{
+		Signature:  0x55AA55AA,
+		ImcRomBase: &testImcRomBase,
+		GecRomBase: &testGecRomBase,
+		XHCRomBase: &testXHCRomBase,
+		Location:   0x20000,
 	}
 )
 
@@ -115,6 +128,19 @@ func TestParseFirmwareEntryTable(t *testing.T) {
 	assert.Equal(t, expectedFet, *entryTable)
 }
 
+func TestParseFirmwareEntryTableShort(t *testing.T) {
+	imageBytes := make([]byte, 500)
+	copy(imageBytes[0:], fetXHCIBytes)
+
+	entryTable, err := ParseFirmwareEntryTable(imageBytes, 0)
+
+	expectedFet := testShortFet
+	expectedFet.Location = 0
+
+	assert.Nil(t, err)
+	assert.Equal(t, expectedFet, *entryTable)
+}
+
 func TestParseFirmwareEntryTableAtAddress(t *testing.T) {
 	baseImage := mockFetImage()
 	entryTable, err := ParseFirmwareEntryTable(baseImage, FETDefaultOffset)
@@ -155,7 +181,25 @@ func TestFirmwareEntryTable_Write(t *testing.T) {
 	copy(expectedBytes[100:], fetBytes)
 
 	assert.Nil(t, err)
-	assert.Equal(t, imageBytes, imageBytes)
+	assert.Equal(t, imageBytes, expectedBytes)
+}
+
+func TestFirmwareEntryTable_WriteNILed(t *testing.T) {
+	imageBytes := make([]byte, 500)
+	expectedBytes := make([]byte, 500)
+
+	nilFet := testFet
+	nilFet.PSPDirBase = nil
+	nilFet.NewPSPDirBase = nil
+	nilFet.BHDDirBase = nil
+	nilFet.NewBHDDirBase = nil
+
+	err := testShortFet.Write(imageBytes, 100)
+
+	copy(expectedBytes[100:], fetXHCIBytes[:0x10])
+
+	assert.Nil(t, err)
+	assert.Equal(t, expectedBytes, imageBytes)
 }
 
 func TestFirmwareEntryTable_WriteFailToSmall(t *testing.T) {

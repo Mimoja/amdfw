@@ -130,7 +130,7 @@ func ParseDirectory(firmwareBytes []byte, address uint32, flashMapping uint32) (
 func (header *DirectoryHeader) Write(baseImage []byte, address uint32) error {
 	buf := new(bytes.Buffer)
 
-	if int(address) + binary.Size(header) > len(baseImage){
+	if int(address)+binary.Size(header) > len(baseImage) {
 		return fmt.Errorf("Writing DirectoryHeader failed: BaseImage to small")
 
 	}
@@ -155,7 +155,7 @@ func (entry *DirectoryEntry) Write(baseImage []byte, address uint32) error {
 		Reserved: entry.Reserved,
 	}
 
-	if int(address) + binary.Size(binEntry) > len(baseImage){
+	if int(address)+binary.Size(binEntry) > len(baseImage) {
 		return fmt.Errorf("Writing DirectoryHeader failed: BaseImage to small")
 
 	}

@@ -7,9 +7,10 @@ import (
 )
 
 var (
-	testImage = Image{
+	testFlashMapping = DefaultFlashMapping
+	testImage        = Image{
 		FET:          &testFet,
-		FlashMapping: 0xFF000000,
+		FlashMapping: &testFlashMapping,
 		Roms: []*Rom{
 			{
 				Type: PSPRom,

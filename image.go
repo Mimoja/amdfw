@@ -1,11 +1,13 @@
 package amdfw
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type (
 	Image struct {
 		FET          *FirmwareEntryTable
-		FlashMapping uint32
+		FlashMapping *uint32
 		Roms         []*Rom
 	}
 )
@@ -28,7 +30,7 @@ func ParseImage(firmwareBytes []byte) (*Image, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Could not parse Image: %v", err)
 	}
-	image.FlashMapping = mapping
+	image.FlashMapping = &mapping
 
 	roms, errs := ParseRoms(firmwareBytes, fet, mapping)
 	if len(errs) != 0 {
@@ -47,12 +49,13 @@ func (image *Image) Write(baseImage []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	for _, rom := range image.Roms {
-		if err = rom.Write(baseImage, image.FET, image.FlashMapping); err != nil {
-			return nil, err
+	if image.FlashMapping != nil {
+		for _, rom := range image.Roms {
+			if err = rom.Write(baseImage, image.FET, *image.FlashMapping); err != nil {
+				return nil, err
+			}
+
 		}
-
 	}
-
 	return baseImage, nil
 }

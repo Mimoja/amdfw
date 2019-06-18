@@ -32,6 +32,12 @@ type binaryFet struct {
 	BHDDirBase    uint32
 	NewBHDDirBase uint32
 }
+type binaryShortFet struct {
+	Signature  uint32
+	ImcRomBase uint32
+	GecRomBase uint32
+	XHCRomBase uint32
+}
 
 // Looks for the FET Signature at the often used offsets.
 func FindFirmwareEntryTable(firmware []byte) (uint32, error) {
@@ -85,7 +91,6 @@ func ParseFirmwareEntryTable(firmware []byte, address uint32) (*FirmwareEntryTab
 		return nil, fmt.Errorf("Could not read FirmwareEntryTable: %v", err)
 	}
 
-	//TODO check validity
 	fet := FirmwareEntryTable{
 		Signature:     tempTable.Signature,
 		ImcRomBase:    &tempTable.ImcRomBase,
@@ -98,21 +103,43 @@ func ParseFirmwareEntryTable(firmware []byte, address uint32) (*FirmwareEntryTab
 		Location:      uint32(address),
 	}
 
+	// Not a full AMDFirmwareEntryTable. XHCI Rom is following...
+	if *fet.PSPDirBase&0xFFFF == 0x55AA {
+		fet.PSPDirBase = nil
+		fet.NewPSPDirBase = nil
+		fet.BHDDirBase = nil
+		fet.NewBHDDirBase = nil
+	}
+
 	return &fet, nil
 }
 
 // Writes FET into existing image
 func (fet *FirmwareEntryTable) Write(baseImage []byte, address uint32) error {
 
-	tempTable := binaryFet{
-		Signature:     fet.Signature,
-		ImcRomBase:    *fet.ImcRomBase,
-		GecRomBase:    *fet.GecRomBase,
-		XHCRomBase:    *fet.XHCRomBase,
-		PSPDirBase:    *fet.PSPDirBase,
-		NewPSPDirBase: *fet.NewPSPDirBase,
-		BHDDirBase:    *fet.BHDDirBase,
-		NewBHDDirBase: *fet.NewBHDDirBase,
+	var tempTable interface{}
+
+	if fet.PSPDirBase == nil &&
+		fet.NewPSPDirBase == nil &&
+		fet.NewBHDDirBase == nil &&
+		fet.BHDDirBase == nil {
+		tempTable = binaryShortFet{
+			Signature:  fet.Signature,
+			ImcRomBase: *fet.ImcRomBase,
+			GecRomBase: *fet.GecRomBase,
+			XHCRomBase: *fet.XHCRomBase,
+		}
+	} else {
+		tempTable = binaryFet{
+			Signature:     fet.Signature,
+			ImcRomBase:    *fet.ImcRomBase,
+			GecRomBase:    *fet.GecRomBase,
+			XHCRomBase:    *fet.XHCRomBase,
+			PSPDirBase:    *fet.PSPDirBase,
+			NewPSPDirBase: *fet.NewPSPDirBase,
+			BHDDirBase:    *fet.BHDDirBase,
+			NewBHDDirBase: *fet.NewBHDDirBase,
+		}
 	}
 
 	fetSize := binary.Size(tempTable)

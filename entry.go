@@ -140,7 +140,13 @@ func ParseEntry(firmwareBytes []byte, directoryEntry DirectoryEntry, flashMappin
 	}
 
 	entry.Header = &header
-	entry.Signature = entryBytes[size-2048/8:]
+	if header.SizeSigned != 0 || header.IsSigned != 0 || len(header.SigFingerprint) == 0 {
+		if header.SizePacked-header.SizeSigned == 0x300 {
+			entry.Signature = entryBytes[0x200:]
+		} else {
+			entry.Signature = entryBytes[0x100:]
+		}
+	}
 
 	entry.Version = fmt.Sprintf("%X.%X.%X.%X", header.Version[3], header.Version[2], header.Version[1], header.Version[0])
 

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"MimojaFirmwareToolkit/pkg/amdfw"
+	"amdfw"
 	"fmt"
 	"github.com/jedib0t/go-pretty/table"
 	"io/ioutil"

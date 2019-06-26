@@ -2,7 +2,7 @@
 
 Golang library for reading and writing AMD firmware components
 
-Credit goes to @cweling for his [psptool](https://github.com/cwerling/psptool)
+Credit goes to @cwerling for his [psptool](https://github.com/cwerling/psptool)
 
 ## amddump
 cmd/amddump is a small tool, that dumps all informations known to this library on a specfic image.

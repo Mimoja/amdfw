@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/mimoja/amdfw"
 	"fmt"
 	"github.com/jedib0t/go-pretty/table"
+	"github.com/mimoja/amdfw"
 	"io/ioutil"
 	"log"
 	"os"

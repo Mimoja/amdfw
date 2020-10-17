@@ -11,8 +11,8 @@ const (
 	XHCIRom   RomType = "XHCI"
 	PSPRom    RomType = "PSP"
 	NewPSPRom RomType = "NEWPSP"
-	BHDRom    RomType = "BHD"
-	NewBHDRom RomType = "NEWBDH"
+	BHDRom    RomType = "BHD (BIOS)"
+	NewBHDRom RomType = "NEWBHD (new BIOS)"
 )
 
 type (
